@@ -465,11 +465,20 @@ sudo chmod 440 /etc/sudoers.d/ybadmin
 
 ```bash
 sudo dnf install python3.9 -y
-# todo(suman) check alternatives
-# Ensure alternatives already exists
+
+# Check if alternatives was already configured for python or python3, and proceed with EITHER option A OR option B
+alternatives --display python
+alternatives --display python3
+
+# A: If alternatives already configured for python, then switch active version
 sudo alternatives --set python /usr/bin/python3.9
 sudo alternatives --set python3 /usr/bin/python3.9
 
+# B: If no alternatives configured for python, then install a new link
+sudo alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1
+sudo alternatives --install /usr/bin/python python /usr/bin/python3.9 1
+
+# Verify versions
 python --version    # Expected: Python 3.9.x
 python3 --version   # Expected: Python 3.9.x
 ```
