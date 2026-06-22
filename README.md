@@ -445,7 +445,7 @@ Navigate to **Admin** > **Alerting & Notifications** to set up email/Slack alert
 
 ## 7. Database Nodes — Prerequisites (All nodes)
 
-Perform the following steps on **each of the database nodes**.
+Perform the following steps on **each of the database nodes**. It's recommended to perform all of the steps in sections 7 and 8 on one node first. Once working, the same steps can be repeated on the other nodes.
 
 ---
 
@@ -459,7 +459,79 @@ echo "ybadmin ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/ybadmin
 sudo chmod 440 /etc/sudoers.d/ybadmin
 ```
 
-### 7.2 Install Python 3.9
+### 7.2 Verify additional software for airgapped deployment
+
+For airgapped VMs, the additional software below may need to be pre-installed:
+- libcgroup (Not neccessary for RHEL 9)
+- libcgroup-tools (Not neccessary for RHEL 9)
+- rsync
+- openssl
+- glibc-locale-source
+- glibc-langpack-en
+- libatomic
+- chrony
+- polkit
+
+Pre-installation is only required if the software package is not available in the local repository.
+
+#### Check if connected to a local repository
+
+```bash
+# Look for your local repository's ID or name in the output
+dnf repolist
+
+# Provides detailed information
+dnf repoinfo
+```
+
+If you have no available local repository for use, then the list of additional software needs to be pre-installed. Else, we can proceed to check if the required packages are available in the local repository.
+
+#### Check required software
+
+For each software package, we'll first check if it installed or missing. If it's missing, we check if it's available in the local repository.
+
+```bash
+rpm -q libcgroup # Not neccessary for RHEL 9
+# If not installed, check availability on local repository by running the command below:
+dnf info libcgroup
+
+rpm -q libcgroup-tools # Not neccessary for RHEL 9
+# If not installed, check availability on local repository by running the command below:
+dnf info libcgroup-tools
+
+rpm -q rsync
+# If not installed, check availability on local repository by running the command below:
+dnf info rsync
+
+rpm -q openssl
+# If not installed, check availability on local repository by running the command below:
+dnf info openssl
+
+rpm -q glibc-locale-source
+# If not installed, check availability on local repository by running the command below:
+dnf info glibc-locale-source
+
+rpm -q glibc-langpack-en
+# If not installed, check availability on local repository by running the command below:
+dnf info glibc-langpack-en
+
+rpm -q libatomic
+# If not installed, check availability on local repository by running the command below:
+dnf info libatomic
+
+rpm -q chrony
+# If not installed, check availability on local repository by running the command below:
+dnf info chrony
+
+rpm -q polkit
+# If not installed, check availability on local repository by running the command below:
+dnf info polkit
+```
+
+Software packages that are not installed AND not avialable in the local repository will need to be pre-installed.
+
+
+### 7.3 Install Python 3.9
 
 #### RHEL 9
 
@@ -483,7 +555,7 @@ python --version    # Expected: Python 3.9.x
 python3 --version   # Expected: Python 3.9.x
 ```
 
-### 7.3 Install policycoreutils (required by node-agent-provision script)
+### 7.4 Install policycoreutils (required by node-agent-provision script)
 
 The provisioning script checks for `policycoreutils`. Install it before running the script on RHEL 9:
 
@@ -491,7 +563,7 @@ The provisioning script checks for `policycoreutils`. Install it before running 
 sudo dnf install -y policycoreutils python3-policycoreutils
 ```
 
-### 7.4 Disable SELinux
+### 7.5 Disable SELinux
 
 ```bash
 getenforce
@@ -502,7 +574,7 @@ sudo reboot
 
 Check that `getenforce` returns `Disabled` after the reboot
 
-### 7.5 Configure Time Synchronization (chrony)
+### 7.6 Configure Time Synchronization (chrony)
 
 Clock synchronization is **critical** for YugabyteDB. All nodes must be time-synced.
 
@@ -539,7 +611,7 @@ timedatectl
 # "NTP synchronized: yes" should appear
 ```
 
-### 7.6 Prepare Data Directories
+### 7.7 Prepare Data Directories
 
 Create mount points for YugabyteDB data storage. If you have dedicated data disks attached:
 
@@ -565,7 +637,7 @@ sudo chmod 755 /data
 
 > **Ownership note:** At this stage `/data` should remain **`root:root`** with mode `755`. Do **not** `chown` it to `ybadmin`. The `node-agent-provision.sh` script (Section 8) creates the `yugabyte` OS user and automatically sets `/data` (and any other mount points listed under `instance_type > mount_points` in `node-agent-provision.yaml`) to **`yugabyte:yugabyte`**. YugabyteDB processes (`yb-master`, `yb-tserver`) run as the `yugabyte` user, so `yugabyte:yugabyte` is the correct final ownership — never `ybadmin`.
 
-### 7.7 Open Required Ports on Database Nodes
+### 7.8 Open Required Ports on Database Nodes
 
 If `firewalld` is active on the DB nodes:
 
