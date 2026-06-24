@@ -553,6 +553,10 @@ sudo alternatives --install /usr/bin/python python /usr/bin/python3.9 1
 # Verify versions
 python --version    # Expected: Python 3.9.x
 python3 --version   # Expected: Python 3.9.x
+
+# Install the Python SELinux package
+sudo pip3 install selinux
+python3 -c "import selinux; import sys; print(sys.version)"
 ```
 
 ### 7.4 Install policycoreutils (required by node-agent-provision script)
