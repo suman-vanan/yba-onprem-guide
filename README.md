@@ -959,6 +959,8 @@ Click the **Preflight Check** button for each instance. All checks must pass bef
 
 ## 10. Create two 3-Node Universes (RF=3)
 
+> Note: If you plan to test upgrading Universe versions, you may provision a Universe with an older version first (for example, `2025.2.3.2-b1`)
+
 The sections below will need to be completed twice to create two universes: one universe in DC, and one universe in DR.
 
 ### 10.1 Navigate to Universe Creation
