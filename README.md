@@ -1109,10 +1109,11 @@ sudo mount -t nfs <NFS_SERVER_IP>:/<EXPORT_PATH> /backup
 # sudo mount -t nfs 10.0.0.100:/export/yb_backups /backup
 ```
 
-**4. Set ownership so the `yugabyte` user can read/write (use the same UID as in your node-agent config, e.g. 1002):**
+**4. Set ownership on the <u>NFS Server</u> so the `yugabyte` user can read/write (use the same UID as in your node-agent config, e.g. 1002):**
 
+For example, if `1002` is the UID in our node-agent config: 
 ```bash
-sudo chown -R yugabyte:yugabyte /backup
+sudo chown -R 1002:1002 /backup
 sudo chmod 755 /backup
 ```
 
