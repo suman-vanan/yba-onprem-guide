@@ -75,11 +75,11 @@ For more details, see the reference architecture diagram:
 
 **Components:**
 
-| Role | Count | Purpose |
-|------|-------|---------|
-| YBA Node | 1 | Management plane — runs YugabyteDB Anywhere, Prometheus, internal PostgreSQL |
-| Data Migration Service | 1 | Migration Service (to migrate from MS SQL / Postgres) |
-| DB Nodes | 6-7 | Data plane — runs YB-Master, YB-TServer, Node Agent |
+| Role                   | Count | Purpose                                                                      |
+| ---------------------- | ----- | ---------------------------------------------------------------------------- |
+| YBA Node               | 1     | Management plane — runs YugabyteDB Anywhere, Prometheus, internal PostgreSQL |
+| Data Migration Service | 1     | Migration Service (to migrate from MS SQL / Postgres)                        |
+| DB Nodes               | 6-7   | Data plane — runs YB-Master, YB-TServer, Node Agent                          |
 
 > **Important:** Keep the YBA (control plane) node separate from the database cluster nodes (data plane).
 
@@ -90,14 +90,14 @@ For more details, see the reference architecture diagram:
 Create **8-9 VMs** (1 YBA + 1 DMS + 6-7 DB nodes).
 **3-4s** DB nodes should be in DC, and **3** nodes in DR.
 
-| S.No | Node Type | Node Identifier \* | Count | vCPU \*\* / node | Memory (GB) \*\* / node | Volumes (disks) / node | Storage (GB) \*\* /node | Total Storage(GB) / node | Volume Type | Role |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 | Mgmt Node | **yb_ybap** | 1 | 4 | 16 | 1 | 150 | 150 | SSD | DBaaS control plane |
-| 2 | Database Migration Service | **yb_migration** | 1 | 4 | 16 | 1 | 300 | 300 | SSD | Migration Service (to migrate from MS SQL / Postgres) |
-| **Primary Universe (DC)** | | | | | | | | | | |
-| 3 | DB Node(s) | **ybp_n1..ybp_n\*** | 3 or 4 \*\*\* | 8 | 32 | 1 | 300 | 300 | SSD | DB node(s) |
-| **Replica or Secondary Universe (DR)** | | | | | | | | | | |
-| 4 | DB Node(s) | **ybr_n1..ybr_n\*** | 3 | 4 \*\*\*\* | 16 \*\*\*\* | 1 | 300 | 300 | SSD | DB node(s) |
+| S.No                                   | Node Type                  | Node Identifier \*  | Count         | vCPU \*\* / node | Memory (GB) \*\* / node | Volumes (disks) / node | Storage (GB) \*\* /node | Total Storage(GB) / node | Volume Type | Role                                                  |
+| :------------------------------------- | :------------------------- | :------------------ | :------------ | :--------------- | :---------------------- | :--------------------- | :---------------------- | :----------------------- | :---------- | :---------------------------------------------------- |
+| 1                                      | Mgmt Node                  | **yb_ybap**         | 1             | 4                | 16                      | 1                      | 150                     | 150                      | SSD         | DBaaS control plane                                   |
+| 2                                      | Database Migration Service | **yb_migration**    | 1             | 4                | 16                      | 1                      | 300                     | 300                      | SSD         | Migration Service (to migrate from MS SQL / Postgres) |
+| **Primary Universe (DC)**              |                            |                     |               |                  |                         |                        |                         |                          |             |                                                       |
+| 3                                      | DB Node(s)                 | **ybp_n1..ybp_n\*** | 3 or 4 \*\*\* | 8                | 32                      | 1                      | 300                     | 300                      | SSD         | DB node(s)                                            |
+| **Replica or Secondary Universe (DR)** |                            |                     |               |                  |                         |                        |                         |                          |             |                                                       |
+| 4                                      | DB Node(s)                 | **ybr_n1..ybr_n\*** | 3             | 4 \*\*\*\*       | 16 \*\*\*\*             | 1                      | 300                     | 300                      | SSD         | DB node(s)                                            |
 
 \* Node identifier is just an arbitrary name to identify nodes in the subsequent sections  
 \*\* vCPU, Memory and Storage need to be adjusted based on the scope  
@@ -110,21 +110,21 @@ Create **8-9 VMs** (1 YBA + 1 DMS + 6-7 DB nodes).
 
 ### Port Access
 
-| S.No | Source | Target | Ports |
-| :--- | :--- | :--- | :--- |
-| 1 | Intranet Network | yb_ybap | 443, 9090, 22 (Browser access is required for 443, 9090) |
-| 2 | yb_ybap | ybp_n1 .. ybp_n* | 7000, 9000, 12000, 13000, 14000, 22, 54422, 9300, 9042, 5433, 7100, 9100, 9070, 18018 |
-| 3 | yb_ybap | ybr_n1 .. ybr_n* | 7000, 9000, 12000, 13000, 14000, 22, 54422, 9300, 9042, 5433, 7100, 9100, 9070, 18018 |
-| 4 | ybp_n1 .. ybp_n* | yb_ybap | 443 |
-| 5 | ybr_n1 .. ybr_n* | yb_ybap | 443 |
-| 6 | ybp_n1 .. ybp_n* | ybp_n1 .. ybp_n* | 7000, 9000, 12000, 13000, 14000, 9300, 9042, 5433, 7100, 9100, 9070, 18018 |
-| 7 | ybr_n1 .. ybr_n* | ybr_n1 .. ybr_n* | 7000, 9000, 12000, 13000, 14000, 9300, 9042, 5433, 7100, 9100, 9070, 18018 |
-| 8 | ybp_n1 .. ybp_n* | ybr_n1 .. ybr_n* | 7100, 9100 |
-| 9 | ybr_n1 .. ybr_n* | ybp_n1 .. ybp_n* | 7100, 9100 |
-| 10 | Intranet Network, Apps | ybp_n1 .. ybp_n* | 5433, 9042 |
-| 11 | Intranet Network, Apps | ybr_n1 .. ybr_n* | 5433, 9042 |
-| 12 | yb_migration | ybp_n1 .. ybp_n* AND [REPLACE_SOURCE_DB] | 5433, [REPLACE_SOURCE_DB_PORT] |
-| 13 | Intranet Network | yb_migration | 22, 443 (Browser access is required for 443) |
+| S.No | Source                 | Target                                   | Ports                                                                                 |
+| :--- | :--------------------- | :--------------------------------------- | :------------------------------------------------------------------------------------ |
+| 1    | Intranet Network       | yb_ybap                                  | 443, 9090, 22 (Browser access is required for 443, 9090)                              |
+| 2    | yb_ybap                | ybp_n1 .. ybp_n*                         | 7000, 9000, 12000, 13000, 14000, 22, 54422, 9300, 9042, 5433, 7100, 9100, 9070, 18018 |
+| 3    | yb_ybap                | ybr_n1 .. ybr_n*                         | 7000, 9000, 12000, 13000, 14000, 22, 54422, 9300, 9042, 5433, 7100, 9100, 9070, 18018 |
+| 4    | ybp_n1 .. ybp_n*       | yb_ybap                                  | 443                                                                                   |
+| 5    | ybr_n1 .. ybr_n*       | yb_ybap                                  | 443                                                                                   |
+| 6    | ybp_n1 .. ybp_n*       | ybp_n1 .. ybp_n*                         | 7000, 9000, 12000, 13000, 14000, 9300, 9042, 5433, 7100, 9100, 9070, 18018            |
+| 7    | ybr_n1 .. ybr_n*       | ybr_n1 .. ybr_n*                         | 7000, 9000, 12000, 13000, 14000, 9300, 9042, 5433, 7100, 9100, 9070, 18018            |
+| 8    | ybp_n1 .. ybp_n*       | ybr_n1 .. ybr_n*                         | 7100, 9100                                                                            |
+| 9    | ybr_n1 .. ybr_n*       | ybp_n1 .. ybp_n*                         | 7100, 9100                                                                            |
+| 10   | Intranet Network, Apps | ybp_n1 .. ybp_n*                         | 5433, 9042                                                                            |
+| 11   | Intranet Network, Apps | ybr_n1 .. ybr_n*                         | 5433, 9042                                                                            |
+| 12   | yb_migration           | ybp_n1 .. ybp_n* AND [REPLACE_SOURCE_DB] | 5433, [REPLACE_SOURCE_DB_PORT]                                                        |
+| 13   | Intranet Network       | yb_migration                             | 22, 443 (Browser access is required for 443)                                          |
 
 For additional details, please see the [networking requirements sections of docs](https://docs.yugabyte.com/stable/yugabyte-platform/prepare/networking/).
 
@@ -744,14 +744,14 @@ lscpu | grep -Ei 'model name|^CPU\(s\)|socket|core|thread|numa|hypervisor'
 
 Update the following fields for each node:
 
-| Field | Value | Description |
-|-------|-------|-------------|
-| `yb_home_dir` | `/home/yugabyte` | YugabyteDB installation directory |
-| `chrony_servers` | `0.rhel.pool.ntp.org, 1.rhel.pool.ntp.org` | NTP servers (use your internal NTP if available) |
-| `yb_user_id` | `1001` | Consistent UID for `yugabyte` user across all nodes |
-| `node_ip` | `<THIS_NODE_IP>` | IP of the current node being provisioned |
-| `tmp_directory` | `/tmp` | Temp directory |
-| `is_airgap` | `false` | Set `true` for airgapped |
+| Field            | Value                                      | Description                                         |
+| ---------------- | ------------------------------------------ | --------------------------------------------------- |
+| `yb_home_dir`    | `/home/yugabyte`                           | YugabyteDB installation directory                   |
+| `chrony_servers` | `0.rhel.pool.ntp.org, 1.rhel.pool.ntp.org` | NTP servers (use your internal NTP if available)    |
+| `yb_user_id`     | `1001`                                     | Consistent UID for `yugabyte` user across all nodes |
+| `node_ip`        | `<THIS_NODE_IP>`                           | IP of the current node being provisioned            |
+| `tmp_directory`  | `/tmp`                                     | Temp directory                                      |
+| `is_airgap`      | `false`                                    | Set `true` for airgapped                            |
 
 # to get id 994 id is in use
 getent passwd 994
@@ -761,26 +761,26 @@ getent group 1001 || echo "GID 1001 is free"
 
 **Provider configuration fields** (to auto-create/update the on-prem provider):
 
-| Field | Value | Description |
-|-------|-------|-------------|
-| `url` | `https://<YBA_NODE_IP>` | YBA base URL |
-| `customer_uuid` | `<YOUR_CUSTOMER_UUID>` | From User Profile in YBA (Step 6.2) |
-| `api_key` | `<YOUR_API_TOKEN>` | From User Profile in YBA (Step 6.2) |
-| `node_name` | `db-node-1` (or `db-node-2`, `db-node-3`) | Unique name for each node |
-| `node_external_fqdn` | `<THIS_NODE_IP>` | IP/FQDN accessible from YBA |
-| `provider > name` | `onprem-dc` | Provider name |
-| `region > name` | `dc1` | Region name (e.g., datacenter name) |
-| `zone > name` | `rack1` (vary per node for fault isolation) | Zone name — use different zones for fault domains |
-| `instance_type > name` | `onprem-8cpu-16gb` | Instance type identifier |
-| `instance_type > cores` | `8` | vCPU count |
-| `instance_type > memory_size` | `16` | RAM in GB |
-| `instance_type > volume_size` | `200` | Data disk size in GB |
-| `instance_type > mount_points` | `/data` | Mount points for data |
+| Field                          | Value                                       | Description                                       |
+| ------------------------------ | ------------------------------------------- | ------------------------------------------------- |
+| `url`                          | `https://<YBA_NODE_IP>`                     | YBA base URL                                      |
+| `customer_uuid`                | `<YOUR_CUSTOMER_UUID>`                      | From User Profile in YBA (Step 6.2)               |
+| `api_key`                      | `<YOUR_API_TOKEN>`                          | From User Profile in YBA (Step 6.2)               |
+| `node_name`                    | `db-node-1` (or `db-node-2`, `db-node-3`)   | Unique name for each node                         |
+| `node_external_fqdn`           | `<THIS_NODE_IP>`                            | IP/FQDN accessible from YBA                       |
+| `provider > name`              | `onprem-dc`                                 | Provider name                                     |
+| `region > name`                | `dc1`                                       | Region name (e.g., datacenter name)               |
+| `zone > name`                  | `rack1` (vary per node for fault isolation) | Zone name — use different zones for fault domains |
+| `instance_type > name`         | `onprem-8cpu-16gb`                          | Instance type identifier                          |
+| `instance_type > cores`        | `8`                                         | vCPU count                                        |
+| `instance_type > memory_size`  | `16`                                        | RAM in GB                                         |
+| `instance_type > volume_size`  | `200`                                       | Data disk size in GB                              |
+| `instance_type > mount_points` | `/data`                                     | Mount points for data                             |
 
 **Example zone distribution for 3 nodes (fault isolation):**
 
-| Node | Zone |
-|------|------|
+| Node      | Zone  |
+| --------- | ----- |
 | db-node-1 | rack1 |
 | db-node-2 | rack2 |
 | db-node-3 | rack3 |
@@ -927,11 +927,11 @@ If you did **not** configure provider details in the YAML, create the provider m
 
 Add region(s) and availability zones:
 
-| Region | Zone |
-|--------|------|
-| dc1 | rack1 |
-| dc1 | rack2 |
-| dc1 | rack3 |
+| Region | Zone  |
+| ------ | ----- |
+| dc1    | rack1 |
+| dc1    | rack2 |
+| dc1    | rack3 |
 
 ### 9.3 Add Instance Type
 
@@ -945,11 +945,11 @@ Add region(s) and availability zones:
 
 Navigate to the provider, click **Add Instances**:
 
-| Instance Name | IP Address | Zone |
-|---------------|------------|------|
-| db-node-1 | x.x.x.x | rack1 |
-| db-node-2 | x.x.x.x | rack2 |
-| db-node-3 | x.x.x.x | rack3 |
+| Instance Name | IP Address | Zone  |
+| ------------- | ---------- | ----- |
+| db-node-1     | x.x.x.x    | rack1 |
+| db-node-2     | x.x.x.x    | rack2 |
+| db-node-3     | x.x.x.x    | rack3 |
 
 ### 9.5 Run Preflight Checks
 
@@ -969,37 +969,37 @@ The sections below will need to be completed twice to create two universes: one 
 
 ### 10.2 Configure General Settings
 
-| Setting | Value |
-|---------|-------|
-| **Universe Name** | `univ-a` (or your preferred name) |
-| **Provider** | `onprem-dc` |
-| **Regions** | `dc1` |
-| **Total Nodes** | `3` |
-| **Replication Factor** | `3` |
+| Setting                | Value                             |
+| ---------------------- | --------------------------------- |
+| **Universe Name**      | `univ-a` (or your preferred name) |
+| **Provider**           | `onprem-dc`                       |
+| **Regions**            | `dc1`                             |
+| **Total Nodes**        | `3`                               |
+| **Replication Factor** | `3`                               |
 
 ### 10.3 Configure Instance
 
-| Setting | Value |
-|---------|-------|
+| Setting           | Value              |
+| ----------------- | ------------------ |
 | **Instance Type** | `onprem-8cpu-32gb` |
 
 ### 10.4 Configure Availability Zones
 
 Assign nodes across zones:
 
-| Zone | Nodes |
-|------|-------|
-| rack1 | 1 |
-| rack2 | 1 |
-| rack3 | 1 |
+| Zone  | Nodes |
+| ----- | ----- |
+| rack1 | 1     |
+| rack2 | 1     |
+| rack3 | 1     |
 
 ### 10.5 Configure Database Settings
 
-| Setting | Value |
-|---------|-------|
-| **YSQL** | Enabled |
-| **YSQL Auth** | Enabled (set password) |
-| **YCQL** | Enabled (optional) |
+| Setting       | Value                                   |
+| ------------- | --------------------------------------- |
+| **YSQL**      | Enabled                                 |
+| **YSQL Auth** | Enabled (set password)                  |
+| **YCQL**      | Enabled (optional)                      |
 | **YCQL Auth** | Enabled (set password, if YCQL enabled) |
 
 ### 10.6 Configure Security (Optional but Recommended)
@@ -1074,14 +1074,14 @@ This section describes how to use an **NFS file share** as the backup storage lo
 
 ### 12.1 Prerequisites
 
-| Requirement | Description |
-|-------------|-------------|
-| **NFS server** | An NFS server that exports a dedicated share for YugabyteDB backups (e.g. `export /export/yb_backups`). |
-| **Network** | All **3 database nodes** can reach the NFS server over the network (typically NFS over TCP, port 2049). Ensure firewall allows NFS (e.g. `nfs`, `rpc-bind`, `mountd`). |
-| **NFS client** | Package `nfs-utils` (or `nfs-common` on Debian/Ubuntu) installed on **each database node**. |
-| **Mount path** | A **common path** on all DB nodes where the NFS share will be mounted (e.g. `/backup` or `/yugadb/backups`). This path is what you will configure in YBA. |
-| **Permissions** | The `yugabyte` user (UID used in `node-agent-provision.yaml`) must have **read, write, and execute** on the mounted directory on every DB node. |
-| **Persistence** | The NFS mount must be added to `/etc/fstab` on each DB node so it survives reboots; otherwise backup/restore can fail after a VM restart. |
+| Requirement     | Description                                                                                                                                                            |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **NFS server**  | An NFS server that exports a dedicated share for YugabyteDB backups (e.g. `export /export/yb_backups`).                                                                |
+| **Network**     | All **3 database nodes** can reach the NFS server over the network (typically NFS over TCP, port 2049). Ensure firewall allows NFS (e.g. `nfs`, `rpc-bind`, `mountd`). |
+| **NFS client**  | Package `nfs-utils` (or `nfs-common` on Debian/Ubuntu) installed on **each database node**.                                                                            |
+| **Mount path**  | A **common path** on all DB nodes where the NFS share will be mounted (e.g. `/backup` or `/yugadb/backups`). This path is what you will configure in YBA.              |
+| **Permissions** | The `yugabyte` user (UID used in `node-agent-provision.yaml`) must have **read, write, and execute** on the mounted directory on every DB node.                        |
+| **Persistence** | The NFS mount must be added to `/etc/fstab` on each DB node so it survives reboots; otherwise backup/restore can fail after a VM restart.                              |
 
 ### 12.2 Mount NFS on Each Database Node
 
@@ -1166,13 +1166,13 @@ This section describes how to configure an **S3-compatible backup provider** (e.
 
 ### 12A.1 Prerequisites
 
-| Requirement | Description |
-|-------------|-------------|
-| **YBA version** | 2025.2.2.2 or later |
+| Requirement                | Description                                                                            |
+| -------------------------- | -------------------------------------------------------------------------------------- |
+| **YBA version**            | 2025.2.2.2 or later                                                                    |
 | **S3-compatible endpoint** | The Commvault or other S3-compatible storage endpoint URL (e.g., `http://10.11.30.38`) |
-| **Access Key & Secret** | Credentials for the S3-compatible storage |
-| **S3 Bucket** | A pre-created bucket on the S3-compatible storage (e.g., `s3://s3bucket`) |
-| **Network** | All database nodes must be able to reach the S3-compatible endpoint |
+| **Access Key & Secret**    | Credentials for the S3-compatible storage                                              |
+| **S3 Bucket**              | A pre-created bucket on the S3-compatible storage (e.g., `s3://s3bucket`)              |
+| **Network**                | All database nodes must be able to reach the S3-compatible endpoint                    |
 
 ### 12A.2 Enable Required Feature Flags
 
@@ -1220,17 +1220,17 @@ After setting all three flags, refresh the YBA UI. The **S3 Path Style Access**,
 2. Navigate to **Integrations** > **Backup** > **Amazon S3**.
 3. Fill in the following:
 
-| Field | Value | Notes |
-|-------|-------|-------|
-| **Configuration Name** | e.g., `commvault-backup` | A descriptive name for this backup config |
-| **IAM Role** | Off | Not applicable for on-prem S3-compatible storage |
-| **Access Key** | `<YOUR_ACCESS_KEY>` | Provided by your Commvault / S3-compatible storage admin |
-| **Access Secret** | `<YOUR_ACCESS_SECRET>` | Provided by your Commvault / S3-compatible storage admin |
-| **S3 Bucket** | `s3://<BUCKET_NAME>` | e.g., `s3://s3bucket` |
-| **S3 Bucket Host Base** | `http://<S3_ENDPOINT_IP>` | The Commvault S3-compatible endpoint (e.g., `http://10.11.30.38`) |
-| **Signing Region** | `us-east-1` | Required but can be any valid region string for on-prem endpoints |
-| **S3 Path Style Access** | **On** (enabled) | Required for most S3-compatible storage (non-AWS) |
-| **S3 Chunked Encoding** | **Off** (disabled) | Must be disabled — Commvault does not support chunked transfer encoding |
+| Field                    | Value                     | Notes                                                                   |
+| ------------------------ | ------------------------- | ----------------------------------------------------------------------- |
+| **Configuration Name**   | e.g., `commvault-backup`  | A descriptive name for this backup config                               |
+| **IAM Role**             | Off                       | Not applicable for on-prem S3-compatible storage                        |
+| **Access Key**           | `<YOUR_ACCESS_KEY>`       | Provided by your Commvault / S3-compatible storage admin                |
+| **Access Secret**        | `<YOUR_ACCESS_SECRET>`    | Provided by your Commvault / S3-compatible storage admin                |
+| **S3 Bucket**            | `s3://<BUCKET_NAME>`      | e.g., `s3://s3bucket`                                                   |
+| **S3 Bucket Host Base**  | `http://<S3_ENDPOINT_IP>` | The Commvault S3-compatible endpoint (e.g., `http://10.11.30.38`)       |
+| **Signing Region**       | `us-east-1`               | Required but can be any valid region string for on-prem endpoints       |
+| **S3 Path Style Access** | **On** (enabled)          | Required for most S3-compatible storage (non-AWS)                       |
+| **S3 Chunked Encoding**  | **Off** (disabled)        | Must be disabled — Commvault does not support chunked transfer encoding |
 
 4. Click **Save**.
 
