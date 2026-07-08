@@ -1300,7 +1300,7 @@ cd yba_installer_full-<NEW_VERSION>/
 ### 14.3 Run Preflight Checks
 
 ```bash
-sudo ./yba-ctl preflight
+sudo ./yba-ctl preflight --upgrade
 ```
 
 Review the output and resolve any issues before proceeding.
