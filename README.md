@@ -536,7 +536,7 @@ Software packages that are not installed AND not avialable in the local reposito
 #### RHEL 9
 
 ```bash
-sudo dnf install python3.9 -y
+sudo dnf install python3.9 python3.9-pip -y
 
 # Check if alternatives was already configured for python or python3, and proceed with EITHER option A OR option B
 alternatives --display python
