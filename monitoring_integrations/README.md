@@ -95,6 +95,8 @@ To federate metrics from YBA to your destination Prometheus, follow [these instr
 
 To use Remote Write to send metrics from YBA's embedded Prometheus to your destination Prometheus, configure your `yba-ctl.yml` configuration file with the following section:
 
+> Tip: You can find your config file location by running `sudo yba-ctl status`
+
 ```yaml
 prometheus:
    remoteWrite:
