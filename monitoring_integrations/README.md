@@ -70,6 +70,46 @@ Verify if the `up` metric can be queried successfully from Elasticsearch. Once s
 
 ---
 
-## 3. SolarWinds
+## 3. Prometheus
+
+There are four options for sending metrics to Prometheus or a Prometheus-compatible backend (e.g. Cortex, Mimir):
+1. Federation
+2. Remote Write
+3. OTLP
+4. Scrape directly from universe nodes
+
+Here's a summary for the first three options:
+
+| Feature                  | Federation                      | Remote Write                            | OTLP Export                                 |
+| ------------------------ | ------------------------------- | --------------------------------------- | ------------------------------------------- |
+| **Direction**            | Pull (Central scrapes Local)    | Push (Local sends to Central)           | Push (Local sends via standard)             |
+| **Best Use Case**        | Global aggregations, low volume | Raw data replication, long-term storage | Vendor-neutral pipelines, unified telemetry |
+| **Bandwidth Efficiency** | Low (Text format over HTTP)     | Highest (Remote Write 2.0 compression)  | Moderate                                    |
+| **Data Translation**     | None (Native Prometheus)        | None (Native Prometheus)                | Required (Prometheus ↔ OTLP semantics)      |
+
+### Federation
+
+To federate metrics from YBA to your destination Prometheus, follow [these instructions](https://docs.yugabyte.com/stable/yugabyte-platform/alerts-monitoring/prometheus-custom/prometheus-federate/).
+
+### Remote Write
+
+To use Remote Write to send metrics from YBA's embedded Prometheus to your destination Prometheus, configure your `yba-ctl.yml` configuration file with the following section:
+
+```yaml
+prometheus:
+   remoteWrite:
+      enabled: true
+      configs: [] # Add your Remote Write config here
+```
+
+After editing your configuration, [reconfigure your YBA installation](https://docs.yugabyte.com/stable/yugabyte-platform/install-yugabyte-platform/install-software/installer/#reconfigure) by running `sudo yba-ctl reconfigure`.
+
+### OTLP
+
+To send metrics from YBA to any OTLP-compatible receiver (e.g. Prometheus 3.0+) using the standard OpenTelemetry wire format, follow [this guide](https://docs.yugabyte.com/stable/yugabyte-platform/alerts-monitoring/anywhere-export-configuration/).
+
+---
+
+## 4. SolarWinds
 
 todo
